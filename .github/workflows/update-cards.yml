@@ -1,0 +1,65 @@
+name: Update Card Data
+
+on:
+  schedule:
+    - cron: '0 6 * * 1'  # Every Monday at 6am UTC
+  push:
+    branches: [main]
+  workflow_dispatch:      # Allows manual trigger from GitHub UI
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Fetch card data from API
+        run: |
+          curl -s "https://marvelsnapzone.com/api/?searchtype=cards&searchcardstype=all" \
+            -H "User-Agent: Mozilla/5.0" \
+            -o raw.json
+
+      - name: Transform to cards.json
+        run: |
+          python3 -c "
+          import json
+
+          with open('raw.json') as f:
+              data = json.load(f)
+
+          raw = data.get('success', {}).get('cards', data.get('cards', []))
+
+          cards = []
+          for c in raw:
+              name = c.get('name') or c.get('cname', '')
+              cid  = c.get('cid', '')
+              if not name or not cid:
+                  continue
+              cards.append({
+                  'cardDefId': cid,
+                  'name':      name,
+                  'cost':      int(c.get('cost', 0) or 0),
+                  'power':     int(c.get('power', 0) or 0),
+                  'ability':   c.get('ability') or c.get('description') or '',
+                  'image':     c.get('url') or c.get('imageurl') or c.get('art') or ''
+              })
+
+          cards.sort(key=lambda x: (x['cost'], x['name']))
+
+          with open('cards.json', 'w') as f:
+              json.dump(cards, f, indent=2)
+
+          print(f'Wrote {len(cards)} cards to cards.json')
+          "
+
+      - name: Commit and push if changed
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add cards.json
+          git diff --staged --quiet || git commit -m "chore: update card data [skip ci]"
+          git push
