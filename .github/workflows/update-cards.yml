@@ -19,24 +19,41 @@ jobs:
 
       - name: Fetch card data from API
         run: |
-          curl -s "https://marvelsnapzone.com/api/?searchtype=cards&searchcardstype=all" \
-            -H "User-Agent: Mozilla/5.0" \
+          echo "Fetching from MarvelSnapZone..."
+          curl -v \
+            "https://marvelsnapzone.com/api/?searchtype=cards&searchcardstype=all" \
+            -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" \
+            -H "Accept: application/json" \
+            -H "Referer: https://marvelsnapzone.com/" \
+            -L \
             -o raw.json
+          echo "--- raw.json first 500 chars ---"
+          head -c 500 raw.json
 
       - name: Transform to cards.json
         run: |
-          python3 -c "
+          python3 << 'EOF'
           import json
 
           with open('raw.json') as f:
-              data = json.load(f)
+              content = f.read()
 
-          raw = data.get('success', {}).get('cards', data.get('cards', []))
+          print(f"raw.json size: {len(content)} bytes")
+          print(f"First 200 chars: {content[:200]}")
+
+          data = json.loads(content)
+
+          if isinstance(data, list):
+              raw = data
+          else:
+              raw = data.get('success', {}).get('cards', data.get('cards', []))
+
+          print(f"Found {len(raw)} raw cards")
 
           cards = []
           for c in raw:
               name = c.get('name') or c.get('cname', '')
-              cid  = c.get('cid', '')
+              cid  = c.get('cid', '') or c.get('cardDefId', '')
               if not name or not cid:
                   continue
               cards.append({
@@ -53,8 +70,8 @@ jobs:
           with open('cards.json', 'w') as f:
               json.dump(cards, f, indent=2)
 
-          print(f'Wrote {len(cards)} cards to cards.json')
-          "
+          print(f"Wrote {len(cards)} cards to cards.json")
+          EOF
 
       - name: Commit and push if changed
         run: |
