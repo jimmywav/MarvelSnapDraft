@@ -20,15 +20,27 @@ jobs:
           python3 << 'PYEOF'
           import urllib.request
           import json
+          import time
 
-          # Community-built Marvel Snap API (open, no auth required)
           url = "https://marvel-snap-bgaona.onrender.com/v1/cards/"
           req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
-          with urllib.request.urlopen(req, timeout=30) as r:
-              raw = json.loads(r.read().decode())
 
-          print(f"Fetched {len(raw)} cards")
-          print(f"Sample: {raw[0]}")
+          raw = None
+          for attempt in range(3):
+              try:
+                  print(f"Attempt {attempt + 1}...")
+                  with urllib.request.urlopen(req, timeout=90) as r:
+                      raw = json.loads(r.read().decode())
+                  print(f"Success! Got {len(raw)} cards")
+                  break
+              except Exception as e:
+                  print(f"Failed: {e}")
+                  if attempt < 2:
+                      print("Waiting 15s before retry...")
+                      time.sleep(15)
+
+          if not raw:
+              raise Exception("All attempts failed")
 
           cards = []
           for c in raw:
