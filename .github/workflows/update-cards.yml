@@ -3,9 +3,7 @@ name: Update Card Data
 on:
   schedule:
     - cron: '0 6 * * 1'  # Every Monday at 6am UTC
-  push:
-    branches: [main]
-  workflow_dispatch:      # Allows manual trigger from GitHub UI
+  workflow_dispatch:
 
 jobs:
   update:
@@ -17,61 +15,43 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Fetch card data from API
+      - name: Fetch card data
         run: |
-          echo "Fetching from MarvelSnapZone..."
-          curl -v \
-            "https://marvelsnapzone.com/api/?searchtype=cards&searchcardstype=all" \
-            -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" \
-            -H "Accept: application/json" \
-            -H "Referer: https://marvelsnapzone.com/" \
-            -L \
-            -o raw.json
-          echo "--- raw.json first 500 chars ---"
-          head -c 500 raw.json
-
-      - name: Transform to cards.json
-        run: |
-          python3 << 'EOF'
+          python3 << 'PYEOF'
+          import urllib.request
           import json
 
-          with open('raw.json') as f:
-              content = f.read()
+          # Community-built Marvel Snap API (open, no auth required)
+          url = "https://marvel-snap-bgaona.onrender.com/v1/cards/"
+          req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+          with urllib.request.urlopen(req, timeout=30) as r:
+              raw = json.loads(r.read().decode())
 
-          print(f"raw.json size: {len(content)} bytes")
-          print(f"First 200 chars: {content[:200]}")
-
-          data = json.loads(content)
-
-          if isinstance(data, list):
-              raw = data
-          else:
-              raw = data.get('success', {}).get('cards', data.get('cards', []))
-
-          print(f"Found {len(raw)} raw cards")
+          print(f"Fetched {len(raw)} cards")
+          print(f"Sample: {raw[0]}")
 
           cards = []
           for c in raw:
-              name = c.get('name') or c.get('cname', '')
-              cid  = c.get('cid', '') or c.get('cardDefId', '')
+              name = c.get("cname", "")
+              cid  = c.get("cid", "")
               if not name or not cid:
                   continue
               cards.append({
-                  'cardDefId': cid,
-                  'name':      name,
-                  'cost':      int(c.get('cost', 0) or 0),
-                  'power':     int(c.get('power', 0) or 0),
-                  'ability':   c.get('ability') or c.get('description') or '',
-                  'image':     c.get('url') or c.get('imageurl') or c.get('art') or ''
+                  "cardDefId": cid,
+                  "name":      name,
+                  "cost":      int(c.get("cost", 0) or 0),
+                  "power":     int(c.get("power", 0) or 0),
+                  "ability":   c.get("ability") or "",
+                  "image":     c.get("art") or ""
               })
 
-          cards.sort(key=lambda x: (x['cost'], x['name']))
+          cards.sort(key=lambda x: (x["cost"], x["name"]))
 
-          with open('cards.json', 'w') as f:
+          with open("cards.json", "w") as f:
               json.dump(cards, f, indent=2)
 
           print(f"Wrote {len(cards)} cards to cards.json")
-          EOF
+          PYEOF
 
       - name: Commit and push if changed
         run: |
