@@ -8,28 +8,12 @@
     "image": "https://marvelsnapzone.com/wp-content/themes/blocksy-child/assets/media/cards/makkari.webp?v=21"
   },
   {
-    "cardDefId": 378,
-    "name": "Mj\u00f6lnir",
-    "cost": 0,
-    "power": 0,
-    "ability": "On Reveal: Give Thor +6 Power.",
-    "image": "https://marvelsnapzone.com/wp-content/themes/blocksy-child/assets/media/cards/mj\u00f6lnir.webp?v=21"
-  },
-  {
     "cardDefId": 293,
     "name": "Wasp",
     "cost": 0,
     "power": 1,
     "ability": "",
     "image": "https://marvelsnapzone.com/wp-content/themes/blocksy-child/assets/media/cards/wasp.webp?v=21"
-  },
-  {
-    "cardDefId": 299,
-    "name": "Widow's Bite",
-    "cost": 0,
-    "power": 0,
-    "ability": "While this is in your hand, cards in your deck cannot be drawn.",
-    "image": "https://marvelsnapzone.com/wp-content/themes/blocksy-child/assets/media/cards/widows-bite.webp?v=21"
   },
   {
     "cardDefId": 307,
@@ -110,14 +94,6 @@
     "power": 1,
     "ability": "When this is destroyed, return it to your hand with double the Power.",
     "image": "https://marvelsnapzone.com/wp-content/themes/blocksy-child/assets/media/cards/deadpool.webp?v=21"
-  },
-  {
-    "cardDefId": 60,
-    "name": "Demon",
-    "cost": 1,
-    "power": 6,
-    "ability": "",
-    "image": "https://marvelsnapzone.com/wp-content/themes/blocksy-child/assets/media/cards/demon.webp?v=21"
   },
   {
     "cardDefId": 73,
@@ -278,22 +254,6 @@
     "power": 2,
     "ability": "If you haven't played this by turn 3, transform into a random spirit animal.",
     "image": "https://marvelsnapzone.com/wp-content/themes/blocksy-child/assets/media/cards/snowguard.webp?v=21"
-  },
-  {
-    "cardDefId": 238,
-    "name": "Space Stone",
-    "cost": 1,
-    "power": 1,
-    "ability": "On Reveal: Next turn you can move 1 card at this location. Draw a card.",
-    "image": "https://marvelsnapzone.com/wp-content/themes/blocksy-child/assets/media/cards/space-stone.webp?v=21"
-  },
-  {
-    "cardDefId": 243,
-    "name": "Squirrel",
-    "cost": 1,
-    "power": 1,
-    "ability": "",
-    "image": "https://marvelsnapzone.com/wp-content/themes/blocksy-child/assets/media/cards/squirrel.webp?v=21"
   },
   {
     "cardDefId": 244,
@@ -648,14 +608,6 @@
     "image": "https://marvelsnapzone.com/wp-content/themes/blocksy-child/assets/media/cards/mysterio.webp?v=21"
   },
   {
-    "cardDefId": 410,
-    "name": "Mysterio?",
-    "cost": 2,
-    "power": 0,
-    "ability": "",
-    "image": "https://marvelsnapzone.com/wp-content/themes/blocksy-child/assets/media/cards/mysterio-.webp?v=21"
-  },
-  {
     "cardDefId": 388,
     "name": "Night Nurse",
     "cost": 2,
@@ -734,14 +686,6 @@
     "power": 6,
     "ability": "You can only play this at a location where you have 6+ total Power.",
     "image": "https://marvelsnapzone.com/wp-content/themes/blocksy-child/assets/media/cards/silver-sable.webp?v=21"
-  },
-  {
-    "cardDefId": 400,
-    "name": "Sinister Clone",
-    "cost": 2,
-    "power": 2,
-    "ability": "",
-    "image": "https://marvelsnapzone.com/wp-content/themes/blocksy-child/assets/media/cards/sinister-clone.webp?v=21"
   },
   {
     "cardDefId": 245,
@@ -862,14 +806,6 @@
     "power": 2,
     "ability": "On Reveal: Add 2 Broodlings to this location with the same Power.",
     "image": "https://marvelsnapzone.com/wp-content/themes/blocksy-child/assets/media/cards/brood.webp?v=21"
-  },
-  {
-    "cardDefId": 387,
-    "name": "Broodling",
-    "cost": 3,
-    "power": 2,
-    "ability": "",
-    "image": "https://marvelsnapzone.com/wp-content/themes/blocksy-child/assets/media/cards/broodling.webp?v=21"
   },
   {
     "cardDefId": 35,
@@ -1822,14 +1758,6 @@
     "power": 5,
     "ability": "On Reveal: Add a 5-Power DoomBot to each other location.",
     "image": "https://marvelsnapzone.com/wp-content/themes/blocksy-child/assets/media/cards/doctor-doom.webp?v=21"
-  },
-  {
-    "cardDefId": 68,
-    "name": "Doombot",
-    "cost": 6,
-    "power": 5,
-    "ability": "",
-    "image": "https://marvelsnapzone.com/wp-content/themes/blocksy-child/assets/media/cards/doombot.webp?v=21"
   },
   {
     "cardDefId": 82,
