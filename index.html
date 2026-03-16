@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Snap Draft</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #08080f;
+      --bg2:       #10101e;
+      --bg3:       #1a1a2e;
+      --red:       #e63946;
+      --gold:      #ffd60a;
+      --blue:      #4cc9f0;
+      --text:      #f0f0f0;
+      --muted:     #7a7a9a;
+      --card-w:    200px;
+      --card-h:    310px;
+      --radius:    12px;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Rajdhani', sans-serif;
+      overflow-x: hidden;
+    }
+
+    /* ── Noise overlay ── */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 9999;
+      opacity: 0.4;
+    }
+
+    /* ─────────── SCREENS ─────────── */
+    .screen { display: none; min-height: 100vh; }
+    .screen.active { display: flex; flex-direction: column; align-items: center; }
+
+    /* ─────────── LANDING ─────────── */
+    #screen-landing {
+      justify-content: center;
+      background:
+        radial-gradient(ellipse 80% 60% at 50% 0%, #1a0a1e 0%, transparent 60%),
+        radial-gradient(ellipse 60% 40% at 80% 80%, #0a1020 0%, transparent 50%),
+        var(--bg);
+    }
+
+    .landing-inner {
+      text-align: center;
+      padding: 2rem;
+    }
+
+    .logo-mark {
+      display: inline-block;
+      width: 80px; height: 80px;
+      background: var(--red);
+      clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+      margin-bottom: 2rem;
+      animation: pulse-logo 3s ease-in-out infinite;
+    }
+    .logo-mark::after {
+      content: '⬡';
+      position: absolute;
+      font-size: 2rem;
+    }
+
+    @keyframes pulse-logo {
+      0%, 100% { filter: drop-shadow(0 0 12px #e6394660); }
+      50% { filter: drop-shadow(0 0 30px #e6394699); }
+    }
+
+    h1.title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(4rem, 12vw, 8rem);
+      letter-spacing: 0.06em;
+      line-height: 0.9;
+      background: linear-gradient(135deg, #fff 30%, #ffd60a 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    h1.title span {
+      display: block;
+      font-size: 0.45em;
+      letter-spacing: 0.3em;
+      background: linear-gradient(90deg, var(--red), #ff6b6b);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .subtitle {
+      font-size: 1.1rem;
+      color: var(--muted);
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      margin: 1.5rem 0 3rem;
+      text-transform: uppercase;
+    }
+
+    .btn-primary {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.6rem;
+      letter-spacing: 0.15em;
+      padding: 0.8rem 3.5rem;
+      border: 2px solid var(--red);
+      background: transparent;
+      color: var(--text);
+      cursor: pointer;
+      border-radius: 4px;
+      transition: all 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn-primary::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: var(--red);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 0.2s ease;
+      z-index: -1;
+    }
+
+    .btn-primary:hover::before { transform: scaleX(1); }
+    .btn-primary:hover { color: #fff; box-shadow: 0 0 30px #e6394640; }
+
+    .loading-msg {
+      margin-top: 1.5rem;
+      font-size: 0.9rem;
+      color: var(--muted);
+      letter-spacing: 0.08em;
+      min-height: 1.2em;
+    }
+
+    /* ─────────── DRAFT SCREEN ─────────── */
+    #screen-draft {
+      padding: 0 1rem 2rem;
+      background:
+        radial-gradient(ellipse 100% 50% at 50% 0%, #0d0d20 0%, transparent 60%),
+        var(--bg);
+    }
+
+    .draft-header {
+      width: 100%;
+      max-width: 900px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.5rem 0 1rem;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .draft-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.8rem;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+    }
+    .draft-title span { color: var(--gold); }
+
+    .progress-wrap {
+      flex: 1; min-width: 200px;
+    }
+
+    .progress-label {
+      font-size: 0.8rem;
+      letter-spacing: 0.15em;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 0.4rem;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .progress-bar {
+      height: 4px;
+      background: var(--bg3);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--red), var(--gold));
+      border-radius: 2px;
+      transition: width 0.4s ease;
+    }
+
+    .pick-prompt {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(1.4rem, 4vw, 2.2rem);
+      letter-spacing: 0.08em;
+      color: var(--text);
+      margin: 0.5rem 0 2rem;
+      text-align: center;
+    }
+
+    /* ── Card Offer ── */
+    .offer-grid {
+      display: flex;
+      gap: clamp(1rem, 3vw, 2rem);
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 3rem;
+    }
+
+    .card-slot {
+      width: var(--card-w);
+      cursor: pointer;
+      animation: card-enter 0.35s ease backwards;
+    }
+    .card-slot:nth-child(1) { animation-delay: 0.05s; }
+    .card-slot:nth-child(2) { animation-delay: 0.15s; }
+    .card-slot:nth-child(3) { animation-delay: 0.25s; }
+
+    @keyframes card-enter {
+      from { opacity: 0; transform: translateY(24px) scale(0.95); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    /* ── Frameless card ── */
+    .card {
+      width: var(--card-w);
+      position: relative;
+      border-radius: var(--radius);
+      overflow: hidden;
+      transition: transform 0.2s ease, filter 0.2s ease;
+      cursor: pointer;
+    }
+
+    .card-slot:hover .card {
+      transform: translateY(-6px) scale(1.04);
+      filter: drop-shadow(0 12px 30px #00000090);
+    }
+
+    .card img {
+      width: 100%;
+      height: var(--card-h);
+      object-fit: cover;
+      object-position: top center;
+      display: block;
+      border-radius: var(--radius);
+    }
+
+    .card-placeholder {
+      width: 100%;
+      height: var(--card-h);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 3.5rem;
+      color: var(--muted);
+      background: linear-gradient(135deg, #1a1a30, #0d0d20);
+      border-radius: var(--radius);
+    }
+
+    .card-info {
+      padding: 0.5rem 0.1rem 0;
+    }
+
+    .card-name {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1rem;
+      letter-spacing: 0.06em;
+      line-height: 1.1;
+      color: #fff;
+      margin-bottom: 0.3rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+
+
+    .card-pick-btn {
+      display: block;
+      width: 100%;
+      margin-top: 0.6rem;
+      padding: 0.45rem;
+      background: transparent;
+      border: 1px solid #ffffff20;
+      border-radius: 6px;
+      color: var(--muted);
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1rem;
+      letter-spacing: 0.12em;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .card-slot:hover .card-pick-btn {
+      background: var(--gold);
+      color: #000;
+      border-color: var(--gold);
+    }
+
+    /* ── Deck Tray ── */
+    .deck-tray {
+      width: 100%;
+      max-width: 900px;
+    }
+
+    .tray-label {
+      font-size: 0.75rem;
+      letter-spacing: 0.2em;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 0.8rem;
+    }
+
+    .tray-cards {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+    }
+
+    .tray-chip {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.25rem 0.6rem;
+      background: var(--bg3);
+      border: 1px solid #ffffff10;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      animation: chip-pop 0.25s ease backwards;
+    }
+
+    @keyframes chip-pop {
+      from { opacity: 0; transform: scale(0.7); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+
+    .tray-chip-cost {
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      background: var(--blue);
+      color: var(--bg);
+      font-size: 0.7rem;
+      font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+
+    /* ─────────── SUMMARY SCREEN ─────────── */
+    #screen-summary {
+      padding: 2rem 1rem 4rem;
+      background:
+        radial-gradient(ellipse 80% 50% at 50% 0%, #1a0a10 0%, transparent 60%),
+        var(--bg);
+    }
+
+    .summary-header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+    }
+
+    .summary-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(3rem, 8vw, 5rem);
+      letter-spacing: 0.08em;
+      background: linear-gradient(135deg, #fff 30%, var(--gold));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .summary-sub {
+      color: var(--muted);
+      letter-spacing: 0.12em;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      margin-top: 0.3rem;
+    }
+
+    .deck-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 0.75rem;
+      width: 100%;
+      max-width: 900px;
+      margin-bottom: 2.5rem;
+    }
+
+    .deck-card {
+      border-radius: 10px;
+      background: var(--bg3);
+      border: 1px solid #ffffff10;
+      overflow: hidden;
+      animation: card-enter 0.3s ease backwards;
+    }
+
+    .deck-card img {
+      width: 100%;
+      height: 120px;
+      object-fit: cover;
+      object-position: top;
+    }
+
+    .deck-card-placeholder {
+      width: 100%;
+      height: 120px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2.5rem;
+      color: var(--muted);
+      background: linear-gradient(135deg, #1a1a30, #0d0d20);
+    }
+
+    .deck-card-info {
+      padding: 0.4rem 0.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .deck-card-name {
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 80%;
+    }
+
+    .deck-card-cost {
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--blue);
+      background: #ffffff10;
+      border-radius: 10px;
+      padding: 1px 6px;
+      flex-shrink: 0;
+    }
+
+    /* ── Deck Code ── */
+    .code-section {
+      width: 100%;
+      max-width: 900px;
+      background: var(--bg2);
+      border: 1px solid #ffffff10;
+      border-radius: 10px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .code-label {
+      font-size: 0.75rem;
+      letter-spacing: 0.2em;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .code-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: #ffffff10;
+    }
+
+    .code-row {
+      display: flex;
+      gap: 0.75rem;
+      align-items: stretch;
+    }
+
+    .code-box {
+      flex: 1;
+      background: var(--bg);
+      border: 1px solid #ffffff15;
+      border-radius: 6px;
+      padding: 0.7rem 1rem;
+      font-family: monospace;
+      font-size: 0.8rem;
+      color: var(--blue);
+      word-break: break-all;
+      line-height: 1.5;
+      max-height: 80px;
+      overflow-y: auto;
+      cursor: text;
+      user-select: all;
+    }
+
+    .btn-copy {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1rem;
+      letter-spacing: 0.1em;
+      padding: 0 1.5rem;
+      background: var(--red);
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+
+    .btn-copy:hover { background: #ff4d5a; }
+    .btn-copy.copied { background: #27ae60; }
+
+    .code-instructions {
+      margin-top: 0.8rem;
+      font-size: 0.8rem;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .code-instructions strong { color: var(--text); }
+
+    .summary-actions {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .btn-secondary {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.3rem;
+      letter-spacing: 0.15em;
+      padding: 0.7rem 2.5rem;
+      border: 2px solid #ffffff20;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      border-radius: 4px;
+      transition: all 0.2s;
+    }
+
+    .btn-secondary:hover {
+      border-color: var(--text);
+      color: var(--text);
+    }
+
+    /* ── Error Banner ── */
+    .api-notice {
+      font-size: 0.75rem;
+      color: #ffd60a88;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-top: 0.5rem;
+      display: none;
+    }
+
+    /* ── Scrollbar ── */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: var(--bg2); }
+    ::-webkit-scrollbar-thumb { background: var(--bg3); border-radius: 2px; }
+
+    /* ── Responsive ── */
+    @media (max-width: 500px) {
+      :root { --card-w: 160px; --card-h: 260px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── LANDING ── -->
+  <div id="screen-landing" class="screen active">
+    <div class="landing-inner">
+      <div class="logo-mark"></div>
+      <h1 class="title">Draft</h1>
+      <button class="btn-primary" id="btn-start" onclick="startDraft()">Begin Draft</button>
+      <p class="loading-msg" id="loading-msg">Loading card data…</p>
+      <p class="api-notice" id="api-notice">⚠ Could not reach card API — check your connection and reload the page</p>
+    </div>
+  </div>
+
+  <!-- ── DRAFT ── -->
+  <div id="screen-draft" class="screen">
+    <div class="draft-header">
+      <div class="draft-title">SNAP <span>DRAFT</span></div>
+      <div class="progress-wrap">
+        <div class="progress-label">
+          <span>DECK PROGRESS</span>
+          <span id="progress-text">0 / 12</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+        </div>
+      </div>
+    </div>
+
+    <p class="pick-prompt">Choose one card for your deck</p>
+
+    <div class="offer-grid" id="offer-grid"></div>
+
+    <div class="deck-tray">
+      <div class="tray-label">Your deck so far</div>
+      <div class="tray-cards" id="tray-cards"></div>
+    </div>
+  </div>
+
+  <!-- ── SUMMARY ── -->
+  <div id="screen-summary" class="screen">
+    <div class="summary-header">
+      <div class="summary-title">Deck Complete</div>
+      <div class="summary-sub">12 cards selected — ready for battle</div>
+    </div>
+
+    <div class="deck-grid" id="deck-grid"></div>
+
+    <div class="code-section">
+      <div class="code-label">Deck Code</div>
+      <div class="code-row">
+        <div class="code-box" id="deck-code" onclick="this.select()"></div>
+        <button class="btn-copy" id="btn-copy" onclick="copyCode()">Copy</button>
+      </div>
+      <p class="code-instructions">
+        To use: Open <strong>Marvel Snap</strong> → Collection → Decks → <strong>New Deck</strong> → tap the import icon → paste this code.
+      </p>
+    </div>
+
+    <div class="summary-actions">
+      <button class="btn-primary" onclick="resetDraft()">Draft Again</button>
+      <button class="btn-secondary" onclick="resetDraft()">New Draft</button>
+    </div>
+  </div>
+
+  <script>
+    // ─── State ───────────────────────────────────────────
+    let allCards = [];
+    let deck = [];
+
+    // ─── Screen management ───────────────────────────────
+    function showScreen(id) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById('screen-' + id).classList.add('active');
+      window.scrollTo(0, 0);
+    }
+
+    // ─── Parse cards.json into our format ───────────────
+    function parseCards(raw) {
+      return raw
+        .filter(c => c.name && c.cardDefId)
+        .map(c => ({
+          cardDefId: c.cardDefId,
+          name:      c.name,
+          cost:      parseInt(c.cost)  || 0,
+          power:     parseInt(c.power) || 0,
+          image:     c.image || null,
+          ability:   c.ability || ''
+        }));
+    }
+
+    // ─── Load cards ──────────────────────────────────────
+    async function loadCards() {
+      const msg = document.getElementById('loading-msg');
+      try {
+        msg.textContent = 'Loading cards…';
+        const res = await fetch('./cards.json');
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        const raw = Array.isArray(data) ? data : (data?.success?.cards || data?.cards || []);
+        if (!raw.length) throw new Error('Empty card list');
+        allCards = parseCards(raw);
+        msg.textContent = `✓ ${allCards.length} cards loaded`;
+      } catch (e) {
+        console.error('Failed to load cards.json:', e.message);
+        msg.textContent = '⚠ Could not load card data';
+        const notice = document.getElementById('api-notice');
+        notice.textContent = '⚠ cards.json missing — run the GitHub Action to generate it';
+        notice.style.display = 'block';
+        document.getElementById('btn-start').disabled = true;
+      }
+    }
+
+
+    // ─── Draft logic ─────────────────────────────────────
+    function getOffer() {
+      const pickedIds = new Set(deck.map(c => c.cardDefId));
+      const pool = allCards.filter(c => !pickedIds.has(c.cardDefId));
+      const shuffled = pool.sort(() => Math.random() - 0.5);
+      return shuffled.slice(0, 3);
+    }
+
+    function pickCard(card) {
+      deck.push(card);
+      updateProgress();
+      updateTray();
+      if (deck.length >= 12) {
+        showSummary();
+      } else {
+        renderOffer();
+      }
+    }
+
+    function updateProgress() {
+      const pct = (deck.length / 12) * 100;
+      document.getElementById('progress-fill').style.width = pct + '%';
+      document.getElementById('progress-text').textContent = `${deck.length} / 12`;
+    }
+
+    function updateTray() {
+      const tray = document.getElementById('tray-cards');
+      const chip = document.createElement('div');
+      chip.className = 'tray-chip';
+      const last = deck[deck.length - 1];
+      chip.innerHTML = `
+        <div class="tray-chip-cost">${last.cost}</div>
+        <span>${last.name}</span>
+      `;
+      tray.appendChild(chip);
+    }
+
+    function renderOffer() {
+      const offer = getOffer();
+      const grid = document.getElementById('offer-grid');
+      grid.innerHTML = '';
+      offer.forEach(card => {
+        const slot = document.createElement('div');
+        slot.className = 'card-slot';
+        slot.innerHTML = buildCardHTML(card);
+        slot.querySelector('.card-pick-btn').addEventListener('click', () => pickCard(card));
+        slot.querySelector('.card').addEventListener('click', () => pickCard(card));
+        grid.appendChild(slot);
+      });
+    }
+
+    function buildCardHTML(card) {
+      const imgHTML = card.image
+        ? `<img src="${card.image}" alt="${card.name}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+          + `<div class="card-placeholder" style="display:none">${card.name[0]}</div>`
+        : `<div class="card-placeholder">${card.name[0]}</div>`;
+      return `
+        <div class="card">
+          ${imgHTML}
+        </div>
+        <div class="card-info">
+          <div class="card-name">${card.name}</div>
+        </div>
+        <button class="card-pick-btn">Pick</button>
+      `;
+    }
+
+    // ─── Start / Reset ───────────────────────────────────
+    async function startDraft() {
+      if (!allCards.length) return; // API failed, button should already be disabled
+      deck = [];
+      document.getElementById('tray-cards').innerHTML = '';
+      updateProgress();
+      showScreen('draft');
+      renderOffer();
+    }
+
+    function resetDraft() {
+      showScreen('landing');
+      document.getElementById('loading-msg').textContent = '✓ Ready';
+    }
+
+    // ─── Summary ─────────────────────────────────────────
+    function showSummary() {
+      showScreen('summary');
+      const grid = document.getElementById('deck-grid');
+      grid.innerHTML = '';
+      deck.forEach((card, i) => {
+        const el = document.createElement('div');
+        el.className = 'deck-card';
+        el.style.animationDelay = (i * 0.05) + 's';
+        const imgHTML = card.image
+          ? `<img src="${card.image}" alt="${card.name}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+            + `<div class="deck-card-placeholder" style="display:none">${card.name[0]}</div>`
+          : `<div class="deck-card-placeholder">${card.name[0]}</div>`;
+        el.innerHTML = `
+          ${imgHTML}
+          <div class="deck-card-info">
+            <span class="deck-card-name">${card.name}</span>
+            <span class="deck-card-cost">${card.cost}</span>
+          </div>
+        `;
+        grid.appendChild(el);
+      });
+      document.getElementById('deck-code').textContent = generateDeckCode();
+    }
+
+    // ─── Deck Code ───────────────────────────────────────
+    function generateDeckCode() {
+      const deckObj = {
+        Cards: deck.map(c => ({ CardDefId: c.cardDefId }))
+      };
+      return btoa(JSON.stringify(deckObj));
+    }
+
+    function copyCode() {
+      const code = document.getElementById('deck-code').textContent;
+      navigator.clipboard.writeText(code).then(() => {
+        const btn = document.getElementById('btn-copy');
+        btn.textContent = 'Copied!';
+        btn.classList.add('copied');
+        setTimeout(() => {
+          btn.textContent = 'Copy';
+          btn.classList.remove('copied');
+        }, 2000);
+      });
+    }
+
+    // ─── Init ─────────────────────────────────────────────
+    loadCards().then(() => {
+      document.getElementById('btn-start').disabled = false;
+    });
+  </script>
+</body>
+</html>
